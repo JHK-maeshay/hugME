@@ -1,0 +1,14 @@
+!! python >= 3.11 !!
+!! cuda >= 12.1 !!
+
+1. make virtual machine
+python -m venv venv
+
+2. activate venv
+venv\Scripts\activate
+
+3. install requirements
+pip install -r requirements.txt
+
+4. start server
+python app\main.py

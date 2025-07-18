@@ -33,6 +33,8 @@ angry.png
 모델 출력의 감정 부분에 대응되는 이미지 출력
 '''
 def load_faces(face_dir="assets/face"):
+    if not os.path.exists(face_dir):
+        os.makedirs(face_dir)
     emotion_to_face = {}
     for filename in os.listdir(face_dir):
         if filename.endswith(".png"):
@@ -41,6 +43,8 @@ def load_faces(face_dir="assets/face"):
     return emotion_to_face
 
 def load_bgs(bg_dir="assets/bg"):
+    if not os.path.exists(bg_dir):
+        os.makedirs(bg_dir)
     situation_to_bg = {}
     for filename in os.listdir(bg_dir):
         if filename.endswith(".png"):
