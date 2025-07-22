@@ -142,6 +142,7 @@ with gr.Blocks(css="""
 
     user_input.submit(on_submit, inputs=[user_input, state], outputs=[chat_output, user_input, state], queue=True)
     reset_btn.click(reset_chat, inputs=None, outputs=[chat_output, user_input, state])
-
-if __name__ == "__main__":
+    
+    #허깅페이스에서 실행
     demo.launch()
+    
