@@ -16,12 +16,9 @@ access_token = os.environ.get("HF_TOKEN")
 tokenizer = AutoTokenizer.from_pretrained(model_id, token=access_token)
 model = AutoModelForCausalLM.from_pretrained(
     model_id,
-    torch_dtype=torch.float16,
     token=access_token
 )
 model.eval()
-if torch.cuda.is_available():
-    model.to("cuda")
 llm = pipeline(
     "text-generation",
     model=model,
