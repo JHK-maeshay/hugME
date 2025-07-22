@@ -1,18 +1,18 @@
-from fastapi import FastAPI
 from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
 import gradio as gr
 import torch
 import re
-
-app = FastAPI()
+import os
 
 print("[torch] is available:", torch.cuda.is_available())
 print("[device] default:", torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
 # 모델 로드
 model_id = "naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B"
-with open("token.txt", "r") as f:
-    access_token = f.read().strip()
+
+# 허깅 페이스 secret에 등록된 토큰 로드
+access_token = os.environ.get("HF_TOKEN")
+
 tokenizer = AutoTokenizer.from_pretrained(model_id, token=access_token)
 model = AutoModelForCausalLM.from_pretrained(
     model_id,

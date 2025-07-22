@@ -10,5 +10,8 @@ venv\Scripts\activate
 3. install requirements
 pip install -r requirements.txt
 
+3.2. recieve hugging face token
+and write it into `./token.txt`
+
 4. start server
 python app\main.py
