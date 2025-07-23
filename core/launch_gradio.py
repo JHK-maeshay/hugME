@@ -24,9 +24,9 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
         def render_chat(ctx: ContextManager):
             html = ""
             for item in ctx.getHistory():
-                if item["role"] == ctx.getUserName():
+                if item["role"] == "user":
                     html += f"<div class='bubble-right'>{item['text']}</div>"
-                elif item["role"] == ctx.getBotName():
+                elif item["role"] == "bot":
                     html += f"<div class='bubble-left'>{item['text']}</div>"
             return gr.update(value=html)
 

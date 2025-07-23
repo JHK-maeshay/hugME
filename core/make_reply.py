@@ -23,6 +23,7 @@ def generate_valid_response(ctx, makePipeline, user_msg) -> str:
         prompt = build_prompt(ctx.getHistory(), user_msg, user_name, bot_name)
         full_text = makePipeline.character_chat(prompt)
         response = extract_response(full_text)
+        print(f"debug: {response}")
         if is_valid_response(response, user_name, bot_name):
             break
     return clean_response(response, bot_name)
@@ -61,8 +62,6 @@ def extract_response(full_text):
 # 응답 유효성 검사
 def is_valid_response(text: str, user_name, bot_name) -> bool:
     if user_name + ":" in text:
-        return False
-    if bot_name + ":" in text:
         return False
     return True
 
