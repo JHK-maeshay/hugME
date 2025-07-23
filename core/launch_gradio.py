@@ -31,19 +31,19 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
             return gr.update(value=html)
 
         def on_submit(user_msg: str, ctx: ContextManager):
-            # 사용자 메세지 추가
+            # 사용자 입력 history에 추가
             ctx.addHistory("user", user_msg)
 
-            # 유저 답변을 포함한 HTML 렌더링
+            # 사용자 입력을 포함한 채팅 우선 렌더링
             html = render_chat(ctx)
-            yield html, "", ctx.getHistory()
+            yield html, "", ctx
 
             # 봇 응답 생성
             generate_reply(ctx, makePipeline, user_msg)
 
-            # 봇 답변을 포함한 HTML 렌더링
+            # 응답을 포함한 전체 history 기반 렌더링
             html = render_chat(ctx)
-            yield html, "", ctx.getHistory()
+            yield html, "", ctx
 
         # history 초기화
         def reset_chat():
