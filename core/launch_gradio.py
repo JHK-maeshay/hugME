@@ -32,7 +32,7 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
 
         def on_submit(user_msg: str, ctx: ContextManager):
             # 사용자 메세지 추가
-            ctx.addMessage("user", user_msg)
+            ctx.addHistory("user", user_msg)
 
             # 유저 답변을 포함한 HTML 렌더링
             html = render_chat(ctx)
