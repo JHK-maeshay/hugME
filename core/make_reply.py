@@ -1,9 +1,7 @@
 import re
 
-from core.make_pipeline import MakePipeline
-
 # 생성된 모든 봇 응답 기록
-def generate_reply(ctx, makePipeLine: MakePipeline, user_msg):
+def generate_reply(ctx, makePipeLine, user_msg):
 
     # 최초 응답
     response = generate_valid_response(ctx, makePipeLine, user_msg)
@@ -15,7 +13,7 @@ def generate_reply(ctx, makePipeLine: MakePipeline, user_msg):
         ctx.addHistory("bot", continuation)
 
 # 봇 응답 1회 생성
-def generate_valid_response(ctx, makePipeline: MakePipeline, user_msg: str) -> str:
+def generate_valid_response(ctx, makePipeline, user_msg) -> str:
     user_name = ctx.getUserName()
     bot_name = ctx.getBotName()
 

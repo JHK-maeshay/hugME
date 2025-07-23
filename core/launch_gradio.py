@@ -1,7 +1,7 @@
 import gradio as gr
-from context_manager import ContextManager
-from make_pipeline import MakePipeline
-from make_reply import generate_reply
+from core.context_manager import ContextManager
+from core.make_pipeline import MakePipeline
+from core.make_reply import generate_reply
 
 def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
     with gr.Blocks(css="""

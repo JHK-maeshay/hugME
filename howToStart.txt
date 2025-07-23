@@ -15,6 +15,6 @@ pip install -r requirements_local.txt
 and write it into `./token.txt`
 
 4. start server
-python app\main.py
+python -m app.main
 
 5. connect to localhost

@@ -9,7 +9,7 @@ from core.launch_gradio import create_interface
 if __name__ == "__main__":
     # 모델 불러오기
     makePipeline = MakePipeline()
-    makePipeline.build("hf")
+    makePipeline.build("lh")
 
     # 채팅 기록 관리자
     ctx = ContextManager()
