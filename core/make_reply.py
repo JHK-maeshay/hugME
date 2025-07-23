@@ -2,15 +2,17 @@ import re
 
 # 생성된 모든 봇 응답 기록
 def generate_reply(ctx, makePipeLine, user_msg):
-
     # 최초 응답
     response = generate_valid_response(ctx, makePipeLine, user_msg)
     ctx.addHistory("bot", response)
 
+    # 불안정한 응답이 유도되므로 사용하지 않음
+    '''
     # 응답이 끊겼다면 추가 생성
     if is_truncated_response(response):
         continuation = generate_valid_response(ctx, makePipeLine, response)
         ctx.addHistory("bot", continuation)
+    '''
 
 # 봇 응답 1회 생성
 def generate_valid_response(ctx, makePipeline, user_msg) -> str:
@@ -20,7 +22,7 @@ def generate_valid_response(ctx, makePipeline, user_msg) -> str:
     while True:
         prompt = build_prompt(ctx.getHistory(), user_msg, user_name, bot_name)
         full_text = makePipeline.character_chat(prompt)
-        response = extract_response(full_text, prompt, user_name, bot_name)
+        response = extract_response(full_text)
         if is_valid_response(response, user_name, bot_name):
             break
     return clean_response(response, bot_name)
@@ -28,25 +30,32 @@ def generate_valid_response(ctx, makePipeline, user_msg) -> str:
 # 입력 프롬프트 정리
 def build_prompt(history, user_msg, user_name, bot_name):
     with open("assets/prompt/init.txt", "r", encoding="utf-8") as f:
-        prompt = f.read().strip()
+        system_prompt = f.read().strip()
 
+    # 최근 대화 히스토리를 일반 텍스트로 재구성
+    dialogue = ""
     for turn in history[-16:]:
         role = user_name if turn["role"] == "user" else bot_name
-        prompt += f"{role}: {turn['text']}\n"
+        dialogue += f"{role}: {turn['text']}\n"
 
-    prompt += f"{user_name}: {user_msg}\n"
-    prompt += f"{bot_name}:"
+    dialogue += f"{user_name}: {user_msg}\n"
+
+    # 모델에 맞는 포맷 구성
+    prompt = f"""### Instruction:
+{system_prompt}
+
+{dialogue}
+### Response:
+{bot_name}:"""
     return prompt
 
-# 출력에서 응답 추출
-def extract_response(full_text, prompt, user_name, bot_name):
-    if full_text.startswith(prompt):
-        reply = full_text[len(prompt):].strip()
+# 출력에서 응답 추출 (HyperCLOVAX 포맷에 맞게)
+def extract_response(full_text):
+    # '### Response:' 이후 텍스트 추출
+    if "### Response:" in full_text:
+        reply = full_text.split("### Response:")[-1].strip()
     else:
-        reply = full_text.split(f"{bot_name}:")[-1].strip()
-    user_token = f"\n{user_name}:"
-    if user_token in reply:
-        reply = reply.split(user_token)[0].strip()
+        reply = full_text.strip()
     return reply
 
 # 응답 유효성 검사
