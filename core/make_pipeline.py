@@ -4,7 +4,7 @@ import os
 
 class MakePipeline:
     # 모델명
-    MODEL_ID = "naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B"
+    MODEL_ID = "naver-hyperclovax/HyperCLOVAX-SEED-Vision-Instruct-3B"
     
     # 변수초기화
     # model_id
