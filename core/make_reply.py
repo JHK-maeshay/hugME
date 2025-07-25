@@ -21,9 +21,11 @@ def generate_valid_response(ctx, makePipeline, user_msg) -> str:
 
     while True:
         prompt = build_prompt(ctx.getHistory(), user_msg, user_name, bot_name)
+        print("\n==========[DEBUG: Prompt]==========")
+        print(prompt)
+        print("===================================\n")
         full_text = makePipeline.character_chat(prompt)
         response = extract_response(full_text)
-        print(f"debug: {response}")
         if is_valid_response(response, user_name, bot_name):
             break
     return clean_response(response, bot_name)
