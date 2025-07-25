@@ -64,7 +64,7 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
                 yield html, "", ctx
 
                 # 봇 응답 생성
-                generate_reply(ctx, makePipeline, user_msg)
+                generate_reply(ctx, makePipeline)
 
                 # 응답을 포함한 전체 history 기반 렌더링
                 html = render_chat(ctx)
