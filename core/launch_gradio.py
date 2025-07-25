@@ -73,7 +73,7 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
             # history 초기화
             def reset_chat():
                 ctx.clearHistory()
-                return gr.update(value=""), "", ctx.getHistory()
+                return gr.update(value=""), "", ctx
 
             user_input.submit(on_submit, inputs=[user_input, state], outputs=[chat_output, user_input, state], queue=True)
             reset_btn.click(reset_chat, inputs=None, outputs=[chat_output, user_input, state])
