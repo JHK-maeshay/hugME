@@ -1,7 +1,7 @@
 class ContextManager:
     # 전역 상수 설정
-    USER_NAME = "User"
-    BOT_NAME = "Tanjiro"
+    USER_NAME = "사용자"
+    BOT_NAME = "탄지로"
 
     def __init__(self):
         self.user_name = self.USER_NAME
