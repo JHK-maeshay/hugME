@@ -1,0 +1,12 @@
+{
+    "cha": {
+        "user_name": "User",
+        "bot_name": "Tanjiro"
+    },
+    "llm": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "repetition_penalty": 1.05,
+        "max_new_tokens": 96
+    }
+}

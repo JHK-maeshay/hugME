@@ -67,3 +67,5 @@ tzdata==2025.2
 urllib3==2.5.0
 uvicorn==0.35.0
 websockets==15.0.1
+einops==0.7.0
+timm==0.9.12
