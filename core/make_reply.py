@@ -65,10 +65,38 @@ def is_valid_response(text: str, user_name, bot_name) -> bool:
         return False
     return True
 
-# 응답 형식 정리
+# 출력 정제
 def clean_response(text: str, bot_name):
-    return re.sub(rf"{bot_name}:\\s*", "", text).strip()
+    # bot_name 제거
+    text = re.sub(rf"{bot_name}:\s*", "", text).strip()
+    # 미완성 문장 제거
+    return clean_truncated_response(text)
 
-# 중단된 응답 여부 검사
-def is_truncated_response(text: str) -> bool:
-    return re.search(r"[.?!…\u2026\u2639\u263A\u2764\uD83D\uDE0A\uD83D\uDE22]$", text.strip()) is None
+# 미완성 문장 삭제
+def clean_truncated_response(text: str) -> str:
+    """
+    응답 텍스트가 미완성된 문장으로 끝나면 마지막 문장을 제거하여 반환,
+    그렇지 않으면 원문 그대로 반환.
+    """
+
+    # 문장 분리 ('.', '?', '!', '~' 등 기준 + 줄바꿈 포함)
+    sentence_end_pattern = r"(?<=[\.?!~])\s|\n"
+    segments = re.split(sentence_end_pattern, text.strip())
+
+    if not segments:
+        return text.strip()
+
+    cleaned = []
+    for s in segments:
+        s = s.strip()
+        if not s:
+            continue
+        # 문장 부호로 끝나는 경우만 포함
+        if re.search(r"[.?!~…\u2026\u2639\u263A\u2764\uD83D\uDE0A\uD83D\uDE22]$", s):
+            cleaned.append(s)
+        else:
+            break  # 불완전한 문장이므로 이후 모두 제거
+
+    # 만약 모든 문장이 끝맺음을 잘 했다면 → 원문 반환
+    result = " ".join(cleaned)
+    return result if result != "" else text.strip()

@@ -1,7 +1,7 @@
 {
     "cha": {
-        "user_name": "User",
-        "bot_name": "Tanjiro"
+        "user_name": "사용자",
+        "bot_name": "탄지로"
     },
     "llm": {
         "temperature": 0.7,

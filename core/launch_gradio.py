@@ -71,12 +71,12 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
                 yield html, "", ctx
 
             # history 초기화
-            def reset_chat():
+            def reset_chat(ctx: ContextManager):
                 ctx.clearHistory()
                 return gr.update(value=""), "", ctx
 
             user_input.submit(on_submit, inputs=[user_input, state], outputs=[chat_output, user_input, state], queue=True)
-            reset_btn.click(reset_chat, inputs=None, outputs=[chat_output, user_input, state])
+            reset_btn.click(reset_chat, inputs=[state], outputs=[chat_output, user_input, state])
 
             ### 2. 설정 탭 ###
             with gr.TabItem("⚙️ 모델 설정"):
