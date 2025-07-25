@@ -35,19 +35,18 @@ def build_prompt(history, user_name, bot_name):
     with open("assets/prompt/init.txt", "r", encoding="utf-8") as f:
         system_prompt = f.read().strip()
 
-    # 최근 대화 히스토리를 일반 텍스트로 재구성
-    dialogue = ""
+    # 프롬프트 구성 (ChatML 스타일)
+    prompt = f"<|system|>\n{system_prompt}\n\n"
+
     for turn in history[-16:]:
-        role = user_name if turn["role"] == "user" else bot_name
-        dialogue += f"{role}: {turn['text']}\n"
+        if turn["role"] == "user":
+            prompt += f"<|user|>\n{turn['text']}\n\n"
+        else:
+            prompt += f"<|assistant|>\n{turn['text']}\n\n"
 
-    # 모델에 맞는 포맷 구성
-    prompt = f"""### Instruction:
-{system_prompt}
-
-{dialogue}
-### Response:
-{bot_name}:"""
+    # 마지막에 assistant 응답 유도
+    prompt += "<|assistant|>\n"
+    
     return prompt
 
 # 출력에서 응답 추출 (HyperCLOVAX 포맷에 맞게)
