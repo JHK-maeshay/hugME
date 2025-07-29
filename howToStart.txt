@@ -1,5 +1,5 @@
-!! python >= 3.11 !!
-!! cuda >= 12.1 !!
+!! python = 3.10 or 3.11 !!
+!! cuda ~= 12.1 !!
 
 1. make virtual machine
 python -m venv venv
