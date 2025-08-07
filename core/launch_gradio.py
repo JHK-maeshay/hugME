@@ -157,7 +157,57 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
 
             ### 3. 프롬프트 편집 탭 ###
             with gr.TabItem("📝 프롬프트 설정"):
-                gr.Markdown("### 캐릭터 및 배경 롬프트 편집")
+                gr.Markdown("### 사용자 및 캐릭터 이름 설정")
+
+                with gr.Row():
+                    user_name = gr.Textbox(label="👤 사용자 이름")
+                    bot_name = gr.Textbox(label="🤖 캐릭터 이름")
+
+                name_status = gr.Textbox(label="", interactive=False)
+
+                with gr.Row():
+                    load_name_btn = gr.Button("📂 이름 불러오기")
+                    save_name_btn = gr.Button("💾 이름 저장하기")
+
+                def load_names(ctx):
+                    cha_cfg = load_full_config("config.json").get("cha", {})
+                    user = cha_cfg.get("user_name", "user")
+                    bot = cha_cfg.get("bot_name", "Tanjiro")
+                    ctx.setUserName(user)
+                    ctx.setBotName(bot)
+                    return user, bot, "📂 이름 불러오기 완료"
+
+                def save_names(user, bot, ctx):
+                    config = load_full_config("config.json")
+                    config["cha"] = {
+                        "user_name": user,
+                        "bot_name": bot
+                    }
+                    save_full_config(config, path="config.json")
+                    ctx.setUserName(user)
+                    ctx.setBotName(bot)
+                    return "💾 이름 저장 완료!"
+
+                load_name_btn.click(
+                    fn=load_names,
+                    inputs=[state],
+                    outputs=[user_name, bot_name, name_status]
+                )
+
+                save_name_btn.click(
+                    save_names,
+                    inputs=[user_name, bot_name, state],
+                    outputs=[name_status]
+                )
+
+                #초기화 시점에서 이름 한번 불러오기
+                demo.load(
+                    fn=load_names,
+                    inputs=[state],
+                    outputs=[user_name, bot_name, name_status]
+                )
+
+                gr.Markdown("### 캐릭터 및 세계관 프롬프트 편집")
 
                 prompt_editor = gr.Textbox(
                     lines=20,
