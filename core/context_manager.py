@@ -10,8 +10,14 @@ class ContextManager:
     def getUserName(self) -> str:
         return self.user_name
     
+    def setUserName(self, user_name):
+        self.user_name = user_name
+    
     def getBotName(self) -> str:
         return self.bot_name
+    
+    def setBotName(self, bot_name):
+        self.bot_name = bot_name
     
     def getHistory(self) -> str:
         return self.history

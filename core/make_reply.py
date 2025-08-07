@@ -41,7 +41,10 @@ def build_prompt(history, user_msg, user_name, bot_name):
         role = user_name if turn["role"] == "user" else bot_name
         dialogue += f"{role}: {turn['text']}\n"
 
+    #유저 입력을 중복적용하므로 삭제
+    '''
     dialogue += f"{user_name}: {user_msg}\n"
+    '''
 
     # 모델에 맞는 포맷 구성
     prompt = f"""### Instruction:

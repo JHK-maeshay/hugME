@@ -58,9 +58,7 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
             def on_submit(user_msg: str, ctx: ContextManager):
                 # 사용자 입력 history에 추가
                 ctx.addHistory("user", user_msg)
-                ###
-                print("[debug]현재 히스토리:", ctx.getHistory())#debug
-                ###
+
                 # 사용자 입력을 포함한 채팅 우선 렌더링
                 html = render_chat(ctx)
                 yield html, "", ctx
@@ -162,8 +160,8 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
                 gr.Markdown("### 사용자 및 캐릭터 이름 설정")
 
                 with gr.Row():
-                    user_name = gr.Textbox(label="👤 사용자 이름", value="user")
-                    bot_name = gr.Textbox(label="🤖 캐릭터 이름", value="Tanjiro")
+                    user_name = gr.Textbox(label="👤 사용자 이름")
+                    bot_name = gr.Textbox(label="🤖 캐릭터 이름")
 
                 name_status = gr.Textbox(label="", interactive=False)
 
@@ -186,6 +184,10 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
                         "bot_name": bot
                     }
                     save_full_config(config, path="config.json")
+
+                    ctx.setUserName(user)
+                    ctx.setBotName = (bot)
+
                     return "💾 이름 저장 완료!"
 
                 load_name_btn.click(
@@ -198,6 +200,13 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
                     save_names,
                     inputs=[user_name, bot_name],
                     outputs=[name_status]
+                )
+
+                #초기화 시점에서 이름 한번 불러오기
+                demo.load(
+                    fn=load_names,
+                    inputs=None,
+                    outputs=[user_name, bot_name, name_status]
                 )
 
                 gr.Markdown("### 캐릭터 및 세계관 프롬프트 편집")
