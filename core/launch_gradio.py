@@ -169,7 +169,7 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
                     load_name_btn = gr.Button("📂 이름 불러오기")
                     save_name_btn = gr.Button("💾 이름 저장하기")
 
-                def load_names():
+                def load_names(ctx):
                     cha_cfg = load_full_config("config.json").get("cha", {})
                     user = cha_cfg.get("user_name", "user")
                     bot = cha_cfg.get("bot_name", "Tanjiro")
@@ -177,7 +177,7 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
                     ctx.setBotName(bot)
                     return user, bot, "📂 이름 불러오기 완료"
 
-                def save_names(user, bot):
+                def save_names(user, bot, ctx):
                     config = load_full_config("config.json")
                     config["cha"] = {
                         "user_name": user,
@@ -189,21 +189,21 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
                     return "💾 이름 저장 완료!"
 
                 load_name_btn.click(
-                    load_names,
-                    inputs=None,
+                    fn=load_names,
+                    inputs=[state],
                     outputs=[user_name, bot_name, name_status]
                 )
 
                 save_name_btn.click(
                     save_names,
-                    inputs=[user_name, bot_name],
+                    inputs=[user_name, bot_name, state],
                     outputs=[name_status]
                 )
 
                 #초기화 시점에서 이름 한번 불러오기
                 demo.load(
                     fn=load_names,
-                    inputs=None,
+                    inputs=[state],
                     outputs=[user_name, bot_name, name_status]
                 )
 
