@@ -4,7 +4,7 @@ import os
 
 class MakePipeline:
     # 모델명
-    MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2"
+    MODEL_ID = "naver-hyperclovax/HyperCLOVAX-SEED-Vision-Instruct-3B"
     
     # 변수초기화
     # model_id
@@ -48,7 +48,6 @@ class MakePipeline:
                 "text-generation",
                 model=model,
                 tokenizer=tokenizer,
-                torch_dtype=torch.float16
             )
 
         else:
