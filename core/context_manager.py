@@ -1,11 +1,10 @@
-class ContextManager:
-    # 전역 상수 설정
-    USER_NAME = "사용자"
-    BOT_NAME = "탄지로"
+from core.utils import load_cha_config
 
+class ContextManager:
     def __init__(self):
-        self.user_name = self.USER_NAME
-        self.bot_name = self.BOT_NAME
+        cha_cfg = load_cha_config("config.json")
+        self.user_name = cha_cfg.get("user_name", "user")
+        self.bot_name = cha_cfg.get("bot_name", "Tanjiro")
         self.history = []
 
     def getUserName(self) -> str:

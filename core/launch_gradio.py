@@ -58,13 +58,15 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
             def on_submit(user_msg: str, ctx: ContextManager):
                 # 사용자 입력 history에 추가
                 ctx.addHistory("user", user_msg)
-
+                ###
+                print("[debug]현재 히스토리:", ctx.getHistory())#debug
+                ###
                 # 사용자 입력을 포함한 채팅 우선 렌더링
                 html = render_chat(ctx)
                 yield html, "", ctx
 
                 # 봇 응답 생성
-                generate_reply(ctx, makePipeline)
+                generate_reply(ctx, makePipeline, user_msg)
 
                 # 응답을 포함한 전체 history 기반 렌더링
                 html = render_chat(ctx)
@@ -157,7 +159,48 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
 
             ### 3. 프롬프트 편집 탭 ###
             with gr.TabItem("📝 프롬프트 설정"):
-                gr.Markdown("### 캐릭터 및 배경 롬프트 편집")
+                gr.Markdown("### 사용자 및 캐릭터 이름 설정")
+
+                with gr.Row():
+                    user_name = gr.Textbox(label="👤 사용자 이름", value="user")
+                    bot_name = gr.Textbox(label="🤖 캐릭터 이름", value="Tanjiro")
+
+                name_status = gr.Textbox(label="", interactive=False)
+
+                with gr.Row():
+                    load_name_btn = gr.Button("📂 이름 불러오기")
+                    save_name_btn = gr.Button("💾 이름 저장하기")
+
+                def load_names():
+                    cha_cfg = load_full_config("config.json").get("cha", {})
+                    return (
+                        cha_cfg.get("user_name", "user"),
+                        cha_cfg.get("bot_name", "Tanjiro"),
+                        "📂 이름 불러오기 완료"
+                    )
+
+                def save_names(user, bot):
+                    config = load_full_config("config.json")
+                    config["cha"] = {
+                        "user_name": user,
+                        "bot_name": bot
+                    }
+                    save_full_config(config, path="config.json")
+                    return "💾 이름 저장 완료!"
+
+                load_name_btn.click(
+                    load_names,
+                    inputs=None,
+                    outputs=[user_name, bot_name, name_status]
+                )
+
+                save_name_btn.click(
+                    save_names,
+                    inputs=[user_name, bot_name],
+                    outputs=[name_status]
+                )
+
+                gr.Markdown("### 캐릭터 및 세계관 프롬프트 편집")
 
                 prompt_editor = gr.Textbox(
                     lines=20,
