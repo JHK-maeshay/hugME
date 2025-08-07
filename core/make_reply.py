@@ -1,9 +1,9 @@
 import re
 
 # 생성된 모든 봇 응답 기록
-def generate_reply(ctx, makePipeLine):
+def generate_reply(ctx, makePipeLine, user_msg):
     # 최초 응답
-    response = generate_valid_response(ctx, makePipeLine)
+    response = generate_valid_response(ctx, makePipeLine, user_msg)
     ctx.addHistory("bot", response)
 
     # 불안정한 응답이 유도되므로 사용하지 않음
@@ -15,12 +15,12 @@ def generate_reply(ctx, makePipeLine):
     '''
 
 # 봇 응답 1회 생성
-def generate_valid_response(ctx, makePipeline) -> str:
+def generate_valid_response(ctx, makePipeline, user_msg) -> str:
     user_name = ctx.getUserName()
     bot_name = ctx.getBotName()
 
     while True:
-        prompt = build_prompt(ctx.getHistory(), user_name, bot_name)
+        prompt = build_prompt(ctx.getHistory(), user_msg, user_name, bot_name)
         print("\n==========[DEBUG: Prompt]==========")
         print(prompt)
         print("===================================\n")
@@ -31,7 +31,7 @@ def generate_valid_response(ctx, makePipeline) -> str:
     return clean_response(response, bot_name)
 
 # 입력 프롬프트 정리
-def build_prompt(history, user_name, bot_name):
+def build_prompt(history, user_msg, user_name, bot_name):
     with open("assets/prompt/init.txt", "r", encoding="utf-8") as f:
         system_prompt = f.read().strip()
 
@@ -40,6 +40,8 @@ def build_prompt(history, user_name, bot_name):
     for turn in history[-16:]:
         role = user_name if turn["role"] == "user" else bot_name
         dialogue += f"{role}: {turn['text']}\n"
+
+    dialogue += f"{user_name}: {user_msg}\n"
 
     # 모델에 맞는 포맷 구성
     prompt = f"""### Instruction:
