@@ -1,18 +1,15 @@
 import re
 
+def generate_reply(ctx, makePipeLine, user_msg):
+    prompt = build_prompt(ctx.getHistory())
+    response = makePipeLine(prompt)
+
+'''
 # 생성된 모든 봇 응답 기록
 def generate_reply(ctx, makePipeLine, user_msg):
     # 최초 응답
     response = generate_valid_response(ctx, makePipeLine, user_msg)
     ctx.addHistory("bot", response)
-
-    # 불안정한 응답이 유도되므로 사용하지 않음
-    '''
-    # 응답이 끊겼다면 추가 생성
-    if is_truncated_response(response):
-        continuation = generate_valid_response(ctx, makePipeLine, response)
-        ctx.addHistory("bot", continuation)
-    '''
 
 # 봇 응답 1회 생성
 def generate_valid_response(ctx, makePipeline, user_msg) -> str:
@@ -40,11 +37,6 @@ def build_prompt(history, user_msg, user_name, bot_name):
     for turn in history[-16:]:
         role = user_name if turn["role"] == "user" else bot_name
         dialogue += f"{role}: {turn['text']}\n"
-
-    #유저 입력을 중복적용하므로 삭제
-    '''
-    dialogue += f"{user_name}: {user_msg}\n"
-    '''
 
     # 모델에 맞는 포맷 구성
     prompt = f"""### Instruction:
@@ -105,3 +97,4 @@ def clean_truncated_response(text: str) -> str:
     # 만약 모든 문장이 끝맺음을 잘 했다면 → 원문 반환
     result = " ".join(cleaned)
     return result if result != "" else text.strip()
+'''
