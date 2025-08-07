@@ -171,11 +171,11 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
 
                 def load_names():
                     cha_cfg = load_full_config("config.json").get("cha", {})
-                    return (
-                        cha_cfg.get("user_name", "user"),
-                        cha_cfg.get("bot_name", "Tanjiro"),
-                        "📂 이름 불러오기 완료"
-                    )
+                    user = cha_cfg.get("user_name", "user")
+                    bot = cha_cfg.get("bot_name", "Tanjiro")
+                    ctx.setUserName(user)
+                    ctx.setBotName(bot)
+                    return user, bot, "📂 이름 불러오기 완료"
 
                 def save_names(user, bot):
                     config = load_full_config("config.json")
@@ -184,10 +184,8 @@ def create_interface(ctx: ContextManager, makePipeline: MakePipeline):
                         "bot_name": bot
                     }
                     save_full_config(config, path="config.json")
-
                     ctx.setUserName(user)
-                    ctx.setBotName = (bot)
-
+                    ctx.setBotName(bot)
                     return "💾 이름 저장 완료!"
 
                 load_name_btn.click(
