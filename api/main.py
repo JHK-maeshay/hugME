@@ -8,7 +8,7 @@ import re
 MODEL = "gpt-5-chat-latest"
 
 # 출력 토큰 상한 (네 설정)
-MAX_OUTPUT_TOKENS = 192
+MAX_OUTPUT_TOKENS = 512
 
 # 입력 히스토리 토큰 예산
 # 모델 전체 컨텍스트가 크더라도 안전하게 여유를 두고 잘라내자
@@ -156,7 +156,7 @@ def on_submit(user_message, history):
 # =========================
 with gr.Blocks() as demo:
     gr.Markdown("## ChatGPT Chatbot")
-    chatbot = gr.Chatbot(type="messages")
+    chatbot = gr.Chatbot(type="messages", height=720)
     msg = gr.Textbox(placeholder="메시지를 입력해 대화해보세요!")
     state = gr.State([])  # system 포함 풀 history
 
@@ -170,4 +170,6 @@ with gr.Blocks() as demo:
     # 쓰레기통(초기화)
     chatbot.clear(fn=reset_chat, outputs=[chatbot, state])
 
-demo.launch()
+demo.launch(share=True)
+
+
