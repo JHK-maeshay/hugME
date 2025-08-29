@@ -204,3 +204,7 @@ __marimo__/
 
 # Custom file
 token.txt
+.gradio/
+exports/
+config.json
+config/

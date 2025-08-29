@@ -1,5 +1,4 @@
-!! python = 3.10 or 3.11 !!
-!! cuda ~= 12.1 !!
+!! recommand python = 3.11 !!
 
 1. make virtual machine
 python -m venv venv
@@ -7,14 +6,10 @@ python -m venv venv
 2. activate venv
 venv\Scripts\activate
 
-3. install requirements_local
-pip install -r requirements_local.txt
-!! not `requirements` !!
-
-3.2. recieve hugging face token
-and write it into `./token.txt`
+3. install requirements
+pip install -r requirements.txt
 
 4. start server
-python -m app.main
+python -m main
 
 5. connect to localhost
