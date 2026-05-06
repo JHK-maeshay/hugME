@@ -16,6 +16,8 @@ SETTINGS_PATH = os.path.join(CONFIG_DIR, "settings.json")
 
 OPENAI_DEFAULT_MODEL = "gpt-5-chat-latest"
 GEMINI_DEFAULT_MODEL = "gemini-2.5-flash"
+OLLAMA_DEFAULT_MODEL = "my-gemma" #default: "gemma4:e2b"
+OLLAMA_BASE_URL = "http://192.168.0.32:11434/v1"
 
 
 # 로컬 토큰 파일 폴백 (OpenAI용)
@@ -25,8 +27,8 @@ TOKEN_TXT_FALLBACK = "token.txt"
 # 기본 설정(초기값)
 # -------------------
 DEFAULT_SETTINGS = {
-    "max_input_tokens": 6000,
-    "max_output_tokens": 512,
+    "max_input_tokens": 512,
+    "max_output_tokens": 8192,
     "safety_margin_tokens": 256
 }
 
@@ -176,6 +178,21 @@ def stream_gemini(local_history, model_name, gemini_key, max_output_tokens):
         if hasattr(chunk, "text") and chunk.text:
             yield chunk.text
 
+def stream_ollama(local_history, model, url, max_output_tokens):
+    # Ollama는 OpenAI 호환 API를 제공하므로 base_url을 로컬 호스트로 변경하여 사용합니다.
+    client = OpenAI(base_url=url, api_key="ollama-local") 
+    stream = client.chat.completions.create(
+        model=model,
+        messages=build_openai_messages(local_history),
+        temperature=0.7,
+        max_tokens=int(max_output_tokens),
+        stream=True,
+    )
+    for chunk in stream:
+        delta = getattr(chunk.choices[0].delta, "content", None)
+        if delta:
+            yield delta
+
 # =========================
 # 키/설정 로드 헬퍼
 # =========================
@@ -200,7 +217,9 @@ def resolve_models():
     data = load_keys() or {}
     openai_model = (data.get("openai") or {}).get("model") or OPENAI_DEFAULT_MODEL
     gemini_model = (data.get("gemini") or {}).get("model") or GEMINI_DEFAULT_MODEL
-    return openai_model, gemini_model
+    ollama_url = (data.get("ollama") or {}).get("base_url") or OLLAMA_BASE_URL
+    ollama_model = (data.get("ollama") or {}).get("model") or OLLAMA_DEFAULT_MODEL
+    return openai_model, gemini_model, ollama_url, ollama_model
 
 def load_settings():
     s = load_json_safe(SETTINGS_PATH, DEFAULT_SETTINGS.copy())
@@ -243,22 +262,24 @@ def export_chat(history, include_system=False, mode="flat"):
 # =========================
 # 전송/스트리밍 (탭1)
 # =========================
+# =========================
+# 전송/스트리밍 (탭1)
+# =========================
 def on_submit(user_message, history, provider, max_input_tokens, max_output_tokens, safety_margin):
     if not user_message:
         return ui_view(history), history
 
     # 모델/키 결정은 JSON에서 로드
-    openai_model, gemini_model = resolve_models()
+    openai_model, gemini_model, ollama_url, ollama_model = resolve_models()
     openai_key = resolve_openai_key()
     gemini_key = resolve_gemini_key()
 
-    if provider == "OpenAI (ChatGPT)" and not openai_key:
-        # 키 누락
-        err = "(오류) OpenAI API 키가 설정되어 있지 않습니다. 탭2에서 저장하세요."
+    if provider == "OpenAI ChatGPT" and not openai_key:
+        err = "(오류) OpenAI API 키가 설정되어 있지 않습니다."
         local = history + [{"role": "user", "content": user_message}, {"role": "assistant", "content": err}]
         return ui_view(local), local
     if provider == "Google Gemini" and not gemini_key:
-        err = "(오류) Gemini API 키가 설정되어 있지 않습니다. 탭2에서 저장하세요."
+        err = "(오류) Gemini API 키가 설정되어 있지 않습니다."
         local = history + [{"role": "user", "content": user_message}, {"role": "assistant", "content": err}]
         return ui_view(local), local
 
@@ -267,17 +288,25 @@ def on_submit(user_message, history, provider, max_input_tokens, max_output_toke
     local = trim_history_for_budget(local, int(max_input_tokens), int(max_output_tokens), int(safety_margin))
 
     # UI에 자리 만들기
-    ui = ui_view(local + [{"role": "assistant", "content": ""}])
-    # 스트리밍
+    ui = ui_view(local + [{"role": "assistant", "content": "*응답 대기 중입니다. 잠시만 기다려 주십시오.*"}])
+    
+    # API 호출 대기 중 사용자 메시지 즉시 렌더링
+    yield ui, local
+    
     partial = ""
     try:
-        if provider == "OpenAI (ChatGPT)":
+        if provider == "OpenAI ChatGPT":
             for delta in stream_openai(local, openai_model, openai_key, int(max_output_tokens)):
                 partial += delta
                 ui[-1]["content"] = partial
                 yield ui, local
-        else:
+        elif provider == "Google Gemini":
             for delta in stream_gemini(local, gemini_model, gemini_key, int(max_output_tokens)):
+                partial += delta
+                ui[-1]["content"] = partial
+                yield ui, local
+        elif provider == "Local Ollama (Gemma 4.0)":
+            for delta in stream_ollama(local, ollama_model, ollama_url, int(max_output_tokens)):
                 partial += delta
                 ui[-1]["content"] = partial
                 yield ui, local
@@ -293,20 +322,22 @@ def on_submit(user_message, history, provider, max_input_tokens, max_output_toke
 # =========================
 # 탭2 토큰 저장/불러오기 핸들러
 # =========================
-def save_keys(openai_key, openai_model, gemini_key, gemini_model):
+def save_keys(openai_key, openai_model, gemini_key, gemini_model, ollama_url, ollama_model):
     data = {
         "openai": {"api_key": (openai_key or "").strip(), "model": (openai_model or OPENAI_DEFAULT_MODEL).strip()},
         "gemini": {"api_key": (gemini_key or "").strip(), "model": (gemini_model or GEMINI_DEFAULT_MODEL).strip()},
+        "ollama": {"base_url": (ollama_url or OLLAMA_BASE_URL).strip(), "model": (ollama_model or OLLAMA_DEFAULT_MODEL).strip()}
     }
     save_json_safe(KEYS_PATH, data)
     return "✅ 저장됨: config/keys.json"
 
 def load_keys_ui():
     data = load_keys() or {}
-    # API 키는 UI에 그대로 노출하지 않음(보안상). 모델만 불러와 채움.
     openai_model = (data.get("openai") or {}).get("model") or OPENAI_DEFAULT_MODEL
     gemini_model = (data.get("gemini") or {}).get("model") or GEMINI_DEFAULT_MODEL
-    return openai_model, gemini_model, "🔄 불러오기 완료(키는 보안상 표시하지 않습니다)"
+    ollama_url = (data.get("ollama") or {}).get("base_url") or OLLAMA_BASE_URL
+    ollama_model = (data.get("ollama") or {}).get("model") or OLLAMA_DEFAULT_MODEL
+    return openai_model, gemini_model, ollama_url, ollama_model, "🔄 불러오기 완료(키는 보안상 표시하지 않습니다)"
 
 # =========================
 # 탭3 설정 저장/불러오기 핸들러
@@ -328,7 +359,7 @@ def load_settings_ui():
 # Gradio UI
 # =========================
 with gr.Blocks() as demo:
-    gr.Markdown("## 멀티 모델 챗봇 (ChatGPT/Gemini)")
+    gr.Markdown("## 멀티 모델 챗봇")
 
     # 전역 상태
     state_history = gr.State([])
@@ -342,16 +373,31 @@ with gr.Blocks() as demo:
         with gr.Tab("💬Chat"):
             with gr.Row():
                 provider = gr.Dropdown(
-                    choices=["OpenAI ChatGPT", "Google Gemini"],
-                    value="Google Gemini",
-                    label="Provider"
+                    choices=["OpenAI ChatGPT", "Google Gemini", "Local Ollama (Gemma 4.0)"],
+                    value="Local Ollama (Gemma 4.0)",
+                    label="Provider",
+                    scale=9
                 )
+                # 초기화 버튼
+                reset_btn = gr.Button("🔄 초기화", scale=1)
 
-            chatbot = gr.Chatbot(type="messages", height=640, label="Chat")
-            msg = gr.Textbox(placeholder="메시지를 입력하세요", label="Message")
+            chatbot = gr.Chatbot(type="messages", height=640, label="Chat", show_label=False)
 
-            with gr.Row():
-                export_btn1 = gr.Button("💾 대화 내역 내보내기")
+            # --- 입력창 박스 ---
+            with gr.Group(): 
+                with gr.Row(equal_height=True):
+                    msg = gr.Textbox(
+                        placeholder="메시지를 입력하세요", 
+                        show_label=False, # 높이 정렬을 위해 라벨은 숨김
+                        scale=9,
+                        container=False # 박스 테두리 중첩 방지
+                    )
+                    submit_btn = gr.Button(
+                        "▶보내기", 
+                        scale=1, 
+                        variant="primary",
+                        min_width=100
+                    )
 
             # 초기 로드: history/설정 불러오기
             def _on_load():
@@ -364,16 +410,36 @@ with gr.Blocks() as demo:
             )
 
             # 전송
-            msg.submit(
+            msg.submit( #엔터키입력
                 on_submit,
                 inputs=[msg, state_history, provider, state_max_in, state_max_out, state_safety],
                 outputs=[chatbot, state_history]
             )
             msg.submit(lambda: "", None, msg)
 
+            submit_btn.click( #버튼입력
+                on_submit,
+                inputs=[msg, state_history, provider, state_max_in, state_max_out, state_safety],
+                outputs=[chatbot, state_history]
+            )
+            submit_btn.click(lambda: "", None, msg)
+
+            # 초기화 동작
+            reset_btn.click(
+                fn=reset_chat,
+                inputs=None,
+                outputs=[chatbot, state_history]
+            )
+
             # 내보내기 버튼(탭1)
-            include_system_chk = gr.Checkbox(label="system 메시지 포함", value=False)
-            mode_radio = gr.Radio(choices=["block", "flat"], value="block", label="형식")
+            with gr.Row():
+                with gr.Column(scale=8):
+                    with gr.Row():
+                        include_system_chk = gr.Checkbox(label="system 메시지 포함", value=False)
+                        mode_radio = gr.Radio(choices=["block", "flat"], value="block", label="형식")
+                
+                # '대화 내역 내보내기'를 체크박스 오른쪽 열에 작게 배치
+                export_btn1 = gr.Button("💾 텍스트 파일 저장", scale=2)
 
             # 결과 파일 1개
             transcript_file1 = gr.File(label="chat_transcript.txt", interactive=False)
@@ -399,6 +465,9 @@ with gr.Blocks() as demo:
             with gr.Row():
                 gemini_key_in = gr.Textbox(label="Google Gemini API Key", type="password", placeholder="AIza...", value="")
                 gemini_model_in = gr.Textbox(label="Gemini 기본 모델", value=GEMINI_DEFAULT_MODEL)
+            with gr.Row():
+                ollama_url_in = gr.Textbox(label="Ollama Base URL", value=OLLAMA_BASE_URL)
+                ollama_model_in = gr.Textbox(label="Ollama 기본 모델", value=OLLAMA_DEFAULT_MODEL)
 
             with gr.Row():
                 save_keys_btn = gr.Button("🔐 토큰/모델 저장 → keys.json")
@@ -408,13 +477,13 @@ with gr.Blocks() as demo:
 
             save_keys_btn.click(
                 save_keys,
-                inputs=[openai_key_in, openai_model_in, gemini_key_in, gemini_model_in],
+                inputs=[openai_key_in, openai_model_in, gemini_key_in, gemini_model_in, ollama_url_in, ollama_model_in],
                 outputs=[token_status]
             )
             load_keys_btn.click(
                 load_keys_ui,
                 inputs=None,
-                outputs=[openai_model_in, gemini_model_in, token_status]
+                outputs=[openai_model_in, gemini_model_in, ollama_url_in, ollama_model_in, token_status]
             )
 
         # ------------------ 탭3: Settings ------------------
@@ -549,4 +618,4 @@ with gr.Blocks() as demo:
             )
 
 # demo.launch(share=True)
-demo.launch()
+demo.launch(server_name="0.0.0.0", auth=("1","1"))
